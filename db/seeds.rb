@@ -7,6 +7,7 @@
 #   Character.create(name: 'Luke', movie: movies.first)
 require 'json'
 require 'open-uri'
+require 'pry-byebug'
 
 def open_api(url)
     puts "opening #{url}..."
@@ -30,49 +31,58 @@ def open_api_model(model)
     return results
 end
 
-Puts "Populating Films..."
+def get_id(url)
+    url.scan(/\d/)[0].to_i
+end
+
+puts "Populating Films..."
 open_api_model('films').each do | film |
     Film.create(title: film["title"])
 end
 
-Puts "Populating Planets..."
+puts "Populating Planets..."
 open_api_model('planets').each do | planet |
     Planet.create(name: planet["name"])
 end
 
-Puts "Populating Categories (Species)..."
+puts "Populating Categories (Species)..."
 open_api_model('species').each do | category |
     Category.create(name: category["name"])
 end
 
-Puts "Populating Starships..."
+puts "Populating Starships..."
 open_api_model('starships').each do | starship |
     Starship.create(name: starship["name"], model: starship["model"])
 end
 
-Puts "Populating Vehicles..."
+puts "Populating Vehicles..."
 open_api_model('vehicles').each do | vehicle |
     Vehicle.create(name: vehicle["name"], model: vehicle["model"])
 end
 
-Puts "Populating People..."
+puts "Populating People..."
 open_api_model('people').each do | person |
-    Character.create(name: person["name"], height: person["height"], mass: person["mass"], birth_year: person["birth_year"])
-    character = Character.last
-    character.planet = Planet.find(person["homeworld"].scan(/\d/))
-    if person["species"]
-        character.category = Category.find(person["species"].scan(/\d/)).name
+    # Character.create(name: person["name"], height: person["height"], mass: person["mass"], birth_year: person["birth_year"])
+    character = Character.new
+    character.name = person["name"]
+    character.height = person["height"]
+    character.mass = person["mass"]
+    character.birth_year = person["birth_year"]
+    puts character.name
+    character.planet = Planet.find(get_id(person["homeworld"]))
+    if person["species"][0]
+        character.category = Category.find(get_id(person["species"].first))
     else
-        character.category = "Human"
+        character.category = Category.find(1)
     end
     person["films"].each do | film |
-        character.films << Film.find(film.scan(/\d/))
+        character.films << Film.find(get_id(film))
     end
     person["vehicles"].each do | vehicle |
-        character.vehicles << Vehicle.find(vehicle.scan(/\d/))
+        character.vehicles << Vehicle.find(get_id(vehicle))
     end
     person["starships"].each do | starship |
-        character.starships << Starship.find(starship.scan(/\d/))
+        character.starships << Starship.find(get_id(starship))
     end
     character.save
 end
