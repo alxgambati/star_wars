@@ -68,7 +68,6 @@ open_api_model('people').each do | person |
     character.height = person["height"]
     character.mass = person["mass"]
     character.birth_year = person["birth_year"]
-    puts character.name
     character.planet = Planet.find(get_id(person["homeworld"]))
     if person["species"][0]
         character.category = Category.find(get_id(person["species"].first))
@@ -84,5 +83,5 @@ open_api_model('people').each do | person |
     person["starships"].each do | starship |
         character.starships << Starship.find(get_id(starship))
     end
-    character.save
+    puts "Creating Character #{character.name}" if character.save
 end
